@@ -4,11 +4,9 @@ import backend.Logic;
 import backend.UIManager;
 import browserview.BrowserComponent;
 import browserview.BrowserComponentStub;
-
 import com.google.common.eventbus.EventBus;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -25,23 +23,17 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.NotificationPane;
-
 import prefs.Preferences;
 import ui.components.HTStatusBar;
 import ui.components.KeyboardShortcuts;
-import ui.components.Notification;
 import ui.components.StatusUI;
 import ui.components.pickers.LabelPicker;
 import ui.issuepanel.PanelControl;
-import util.GlobalHotkey;
-import util.PlatformEx;
-import util.PlatformSpecific;
-import util.TickingTimer;
-import util.Utility;
+import undo.UndoController;
+import util.*;
 import util.events.*;
 import util.events.Event;
 import util.events.testevents.PrimaryRepoChangedEvent;
@@ -53,7 +45,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static ui.components.KeyboardShortcuts.SWITCH_DEFAULT_REPO;
 
@@ -84,6 +75,7 @@ public class UI extends Application implements EventDispatcher {
     private TickingTimer refreshTimer;
     public GUIController guiController;
     private NotificationController notificationController;
+    public UndoController undoController;
 
 
     // Main UI elements
@@ -217,6 +209,7 @@ public class UI extends Application implements EventDispatcher {
         refreshTimer = new TickingTimer("Refresh Timer", REFRESH_PERIOD,
             status::updateTimeToRefresh, () -> logic.refresh(isNotificationPaneShowing()), TimeUnit.SECONDS);
         refreshTimer.start();
+        undoController = new UndoController(logic, notificationController);
     }
 
     private void initUI(Stage stage) {
@@ -548,10 +541,6 @@ public class UI extends Application implements EventDispatcher {
 
     public HWND getMainWindowHandle() {
         return mainWindowHandle;
-    }
-
-    public void showNotification(Notification notification) {
-        notificationController.showNotification(notification);
     }
 
     public void triggerNotificationAction() {
