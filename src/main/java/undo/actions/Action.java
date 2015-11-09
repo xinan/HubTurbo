@@ -1,7 +1,5 @@
 package undo.actions;
 
-import javafx.util.Pair;
-
 public interface Action<T> {
 
     String getDescription();
@@ -10,7 +8,9 @@ public interface Action<T> {
 
     T undo(T t);
 
-    Pair<Action, Action> reconcile(Action a, Action b);
+    static ReconciledActions reconcile(Action a, Action b) {
+        return new ReconciledActions(a, b);
+    }
 
     boolean isNoOp();
 
@@ -31,11 +31,6 @@ public interface Action<T> {
             @Override
             public T undo(T t) {
                 return (T) that.act(t);
-            }
-
-            @Override
-            public Pair<Action, Action> reconcile(Action a, Action b) {
-                return that.reconcile(a, b);
             }
 
             @Override

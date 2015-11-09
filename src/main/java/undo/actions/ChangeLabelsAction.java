@@ -46,31 +46,27 @@ public class ChangeLabelsAction implements Action<TurboIssue> {
         return issue;
     }
 
-    @Override
-    public Pair<Action, Action> reconcile(Action a, Action b) {
-        if (a.getClass().equals(this.getClass()) && b.getClass().equals(this.getClass())) {
-            ChangeLabelsAction actionA = (ChangeLabelsAction) a;
-            ChangeLabelsAction actionB = (ChangeLabelsAction) b;
-            if (actionA.getOriginalIssue().getRepoId().equals(actionB.getOriginalIssue().getRepoId()) &&
-                    actionA.getOriginalIssue().getId() == actionB.getOriginalIssue().getId()) {
-                ChangeLabelsAction newActionA = new ChangeLabelsAction(actionA.getOriginalIssue(),
-                        actionA.getAddedLabels().stream()
-                                .filter(addedLabel -> !actionB.getRemovedLabels().contains(addedLabel))
-                                .collect(Collectors.toList()),
-                        actionA.getRemovedLabels().stream()
-                                .filter(removedLabel -> !actionB.getAddedLabels().contains(removedLabel))
-                                .collect(Collectors.toList()));
-                return new Pair<>(newActionA,
-                        new ChangeLabelsAction(newActionA.act(actionA.getOriginalIssue()),
-                                actionB.getAddedLabels().stream()
-                                        .filter(addedLabel -> !actionA.getRemovedLabels().contains(addedLabel))
-                                        .collect(Collectors.toList()),
-                                actionB.getRemovedLabels().stream()
-                                        .filter(removedLabel -> !actionA.getAddedLabels().contains(removedLabel))
-                                        .collect(Collectors.toList())));
-            }
+    private static ReconciledActions reconcile(ChangeLabelsAction actionA, ChangeLabelsAction actionB) {
+        if (actionA.getOriginalIssue().getRepoId().equals(actionB.getOriginalIssue().getRepoId()) &&
+                actionA.getOriginalIssue().getId() == actionB.getOriginalIssue().getId()) {
+            ChangeLabelsAction newActionA = new ChangeLabelsAction(actionA.getOriginalIssue(),
+                    actionA.getAddedLabels().stream()
+                            .filter(addedLabel -> !actionB.getRemovedLabels().contains(addedLabel))
+                            .collect(Collectors.toList()),
+                    actionA.getRemovedLabels().stream()
+                            .filter(removedLabel -> !actionB.getAddedLabels().contains(removedLabel))
+                            .collect(Collectors.toList()));
+            return new ReconciledActions(newActionA,
+                    new ChangeLabelsAction(newActionA.act(actionA.getOriginalIssue()),
+                            actionB.getAddedLabels().stream()
+                                    .filter(addedLabel -> !actionA.getRemovedLabels().contains(addedLabel))
+                                    .collect(Collectors.toList()),
+                            actionB.getRemovedLabels().stream()
+                                    .filter(removedLabel -> !actionA.getAddedLabels().contains(removedLabel))
+                                    .collect(Collectors.toList())));
+        } else {
+            return new ReconciledActions(actionA, actionB);
         }
-        return new Pair<>(a, b);
     }
 
     @Override

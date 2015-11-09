@@ -34,10 +34,11 @@ public class LabelPicker {
         // show LabelPickerDialog and wait for result
         Optional<List<String>> result = labelPickerDialog.showAndWait();
         stage.show(); // ensures stage is showing after label picker is closed (mostly for tests)
-        // if result is present (user did not cancel) then replace issue labels with result
+        // if result is present (i.e. user did not cancel) then replace issue labels with result
         if (result.isPresent()) {
             List<String> originalLabels = issue.getLabels().stream().sorted().collect(Collectors.toList());
             List<String> newLabels = result.get().stream().sorted().collect(Collectors.toList());
+            // only do something if the resulting lists of labels are different
             if (!newLabels.equals(originalLabels)) {
                 ui.undoController.addAction(issue, ChangeLabelsAction.createChangeLabelsAction(issue, newLabels));
             }
